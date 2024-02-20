@@ -57,3 +57,30 @@ W powyższym przykładzie:
 - `-p http://myproxy:8080` włącza użycie proxy pod adresem `http://myproxy:8080`.
 
 Po uruchomieniu programu z taką komendą, program rozpocznie przeszukiwanie Google za pomocą dorków zdefiniowanych w pliku `all_google_dorks.txt`. Wyniki wyszukiwania zostaną zapisane do plików `results.json` i `results.txt`. Dodatkowo, program będzie korzystał z proxy pod adresem `http://myproxy:8080`.
+Oczywiście, oto kilka przykładowych komend, które możesz użyć w programie `pa
+1. Wyszukiwanie dorków dla określonej domeny bez użycia proxy:
+```bash
+python pagodo.py -g all_google_dorks.txt -d example.com -o results.json -s results.txt
+```
+
+2. Wyszukiwanie dorków z określonym opóźnieniem między zapytaniami (np. 30 sekund między każdym zapytaniem):
+```bash
+python pagodo.py -g all_google_dorks.txt -i 30 -x 60 -o results.json -s results.txt
+```
+
+3. Wyszukiwanie dorków z wyłączoną weryfikacją SSL:
+```bash
+python pagodo.py -g all_google_dorks.txt -l -o results.json -s results.txt
+```
+
+4. Wyszukiwanie dorków z ograniczeniem maksymalnej liczby wyników na dork (np. 50 wyników na dork):
+```bash
+python pagodo.py -g all_google_dorks.txt -m 50 -o results.json -s results.txt
+```
+
+5. Wyszukiwanie dorków z wybranymi dorkami zamiast wszystkich (np. tylko dla dorka dotyczącego stron logowania):
+```bash
+python pagodo.py -g pages_containing_login_portals.dorks -o results.json -s results.txt
+```
+
+Pamiętaj, że możesz łączyć różne opcje zgodnie z potrzebami i dostosować parametry do swoich wymagań.
