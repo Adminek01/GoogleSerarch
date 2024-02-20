@@ -43,3 +43,17 @@ Możesz również dostosować inne opcje w zależności od swoich potrzeb, np.:
 - `-p` dla użycia proxy, itp.
 
 Po uruchomieniu programu będziesz mógł monitorować jego postęp, a wyniki zostaną zapisane zgodnie z wybranymi opcjami.
+Program `GoogleSerarch` służy do przeprowadzania pasywnych wyszukiwań w Google za pomocą dorków. Dorki to specjalne zapytania, które umożliwiają precyzyjne wyszukiwanie informacji w Google, co może być przydatne w celach badawczych, audytach bezpieczeństwa, pozyskiwaniu danych itp.
+
+Przykładowa komenda użycia programu:
+```bash
+python pagodo.py -g all_google_dorks.txt -o results.json -s results.txt -p http://myproxy:8080
+```
+
+W powyższym przykładzie:
+- `-g all_google_dorks.txt` określa plik zawierający dorki, które będą używane do wyszukiwania,
+- `-o results.json` definiuje nazwę pliku, do którego zostaną zapisane wyniki w formacie JSON,
+- `-s results.txt` określa nazwę pliku, do którego zostaną zapisane wyniki w formacie tekstowym,
+- `-p http://myproxy:8080` włącza użycie proxy pod adresem `http://myproxy:8080`.
+
+Po uruchomieniu programu z taką komendą, program rozpocznie przeszukiwanie Google za pomocą dorków zdefiniowanych w pliku `all_google_dorks.txt`. Wyniki wyszukiwania zostaną zapisane do plików `results.json` i `results.txt`. Dodatkowo, program będzie korzystał z proxy pod adresem `http://myproxy:8080`.
