@@ -9,7 +9,7 @@ import random
 import re
 import sys
 import time
-import yagooglesearch
+from GoogleSerarch import GoogleSearch  # Import GoogleSearch module
 
 __version__ = "2.6.1"
 
@@ -102,6 +102,46 @@ class Pagodo:
                                             self.maximum_delay_between_dork_searches_in_seconds), 1)
                        for _ in range(20)])
 
+    def _handle_long_query(self, query):
+        if len(query.split(" ")) > 32:
+            ignored_string = " ".join(query.split(" ")[32:])
+            self.log.warning(
+                "Google limits queries to 32 words (separated by spaces):  Removing from search query: "
+                f"'{ignored_string}'"
+            )
+            updated_query = " ".join(query.split(" ")[:32])
+            if query.endswith('"'):
+                updated_query = f'{updated_query}"'
+            self.log.info(f"New search query: {updated_query}")
+            return updated_query
+        return query
+
+    def _remove_false_positives(self, urls_list):
+        ignore_url_list = [
+            "https://www.kb.cert.org",
+            "https://www.exploit-db.com/",
+            "https://twitter.com/ExploitDB/",
+        ]
+        return [url for url in urls_list if not any(re.search(ignore_url, url, re.IGNORECASE) for ignore_url in ignore_url_list)]
+
+    def _process_found_urls(self, dork, urls_list, urls_list_size):
+        self.log.info(f"Results: {urls_list_size} URLs found for Google dork: {dork}")
+        dork_urls_list_as_string = "\n".join(urls_list)
+        self.log.info(f"dork_urls_list:\n{dork_urls_list_as_string}")
+        self.total_urls_found += urls_list_size
+
+        if self.save_urls_to_file:
+            with open(self.save_urls_to_file, "a") as fh:
+                fh.write(f"# {dork}\n")
+                for url in urls_list:
+                    fh.write(f"{url}\n")
+                fh.write("#" * 50 + "\n")
+
+        self.pagodo_results_dict["dorks"][dork] = {
+            "urls_size": urls_list_size,
+            "urls": urls_list,
+        }
+
     def go(self):
         """Start pagodo Google dork search."""
         initiation_timestamp = datetime.datetime.now().isoformat()
@@ -123,50 +163,13 @@ class Pagodo:
                 else:
                     query = dork
 
-                # Handle long queries
                 query = self._handle_long_query(query)
 
                 proxy_index = self.proxy_rotation_index % len(self.proxies)
                 proxy = self.proxies[proxy_index]
                 self.proxy_rotation_index += 1
 
-                client = yagooglesearch.SearchClient(
+                client = GoogleSearch(
                     query,
-                    tbs="li:1",
-                    num=100,
-                    max_search_result_urls_to_return=self.max_search_result_urls_to_return_per_dork,
-                    proxy=proxy,
-                    verify_ssl=not self.disable_verify_ssl,
-                    verbosity=self.verbosity,
-                )
-
-                client.assign_random_user_agent()
-                self.log.info(f"Search ( {dork_counter} / {total_dorks_to_search} ) for Google dork [ {query} ] using User-Agent '{client.user_agent}' through proxy '{proxy}'")
-                dork_urls_list = client.search()
-
-                # Remove false positives
-                dork_urls_list = self._remove_false_positives(dork_urls_list)
-
-                dork_urls_list_size = len(dork_urls_list)
-                if dork_urls_list:
-                    self._process_found_urls(dork, dork_urls_list, dork_urls_list_size)
-                else:
-                    self.log.info(f"Results: {dork_urls_list_size} URLs found for Google dork: {dork}")
-
-            except KeyboardInterrupt:
-                sys.exit(0)
-
-            except Exception as e:
-                self.log.error(f"Error with dork: {dork}.  Exception {e}")
-                if type(e).__name__ == "SSLError" and (not self.disable_verify_ssl):
-                    self.log.info("If you are using self-signed certificates for an HTTPS proxy, try-rerunning with the -l switch to disable verifying SSL/TLS certificates.  Exiting...")
-                    sys.exit(1)
-
-            dork_counter += 1
-            if dork != self.google_dorks[-1]:
-                pause_time = random.choice(self.delay_between_dork_searches_list)
-                self.log.info(f"Sleeping {pause_time} seconds before executing the next dork search...")
-                time.sleep(pause_time)
-
-        self.log.info(f"Total URLs found for the {total_dorks_to_search} total dorks searched: {self.total_urls_found}")
-        completion_timestamp
+                    num_results=self.max_search_result_urls_to_return_per_dork,
+                   
